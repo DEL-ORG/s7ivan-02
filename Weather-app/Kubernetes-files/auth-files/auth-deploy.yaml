@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s7ivan-auth-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather
+      svc: auth
+  template:
+    metadata:
+      labels:
+        app: weather
+        svc: auth
+    spec:
+      containers:
+      - name: s7ivan-auth
+        image: devopseasylearning/tarzan-auth:v0.0.1
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_HOST
+          value: "db"
+        - name: DB_PASSWORD
+          value: "my-secret-pw"
+  strategy:
+   type: RollingUpdate
+   rollingUpdate:
+     maxUnavailable: 1
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  type: NodePort
+  selector:
+    svc: auth
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 8080
+      protocol: TCP
+
+
+

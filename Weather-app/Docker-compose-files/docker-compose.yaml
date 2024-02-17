@@ -1,0 +1,93 @@
+version: '3'
+services:
+  # Database Service
+  db:
+    container_name: s7ivan-db
+    image: mysql:8.0.2
+    environment:
+      - MYSQL_ROOT_PASSWORD=my-secret-pw
+    volumes:
+      - mysql_data:/var/lib/mysql
+    # networks : tarzan1 (ui-auth),  tarzan2(auth-db), tarzan3(ui-redis), tarzan4(ui-weather)
+    networks:
+      - tarzan2
+    restart: always
+    ports:
+      - 3306:3306
+  # Authentication Service
+  auth:
+    container_name: s7ivan-auth
+    image:  devopseasylearning/tarzan-auth:v0.0.1
+    environment:
+      - DB_HOST=db
+      - DB_PASSWORD=my-secret-pw
+    depends_on:
+      - db
+    networks:
+      - tarzan1
+      - tarzan2
+    restart: always
+    expose:
+      - 8080
+    ports:
+      - 8080:8080
+
+  # Redis Service
+  redis:
+    container_name: s7ivan-redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_USER=redis
+      - REDIS_PASSWORD=redis
+    networks:
+      - tarzan3
+    restart: always
+    volumes:
+      - data_redis:/data
+  # Weather Service
+  weather:
+    container_name: s7ivan-weather
+    image:  devopseasylearning/tarzan-weather:v0.0.2
+    environment:
+      - APIKEY=ecbc396f46mshb65cbb1f82cf334p1fcc87jsna5e962a3c542
+    expose:
+      - 5000
+    ports:
+      - 5000:5000
+    networks:
+      - tarzan4
+    restart: always
+# UI Service
+  ui:
+    container_name: s7ivan-ui
+    image: devopseasylearning/tarzan-ui:v0.0.1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth
+    environment:
+      - AUTH_HOST=auth
+      - AUTH_PORT=8080
+      - WEATHER_HOST=weather
+      - WEATHER_PORT=5000
+      - REDIS_USER=redis
+      - REDIS_PASSWORD=redis
+    networks:
+      - tarzan1
+      - tarzan3
+      - tarzan4
+    restart: always
+networks:
+  tarzan1:
+    driver: bridge
+  tarzan2:
+    driver: bridge
+  tarzan3:
+    driver: bridge
+  tarzan4:
+    driver: bridge
+volumes:
+  mysql_data:
+  data_redis:

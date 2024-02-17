@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s7ivan-weather-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather
+      svc: weather
+  template:
+    metadata:
+      labels:
+        app: weather
+        svc: weather
+    spec:
+      containers:
+      - name: s7ivan-weather
+        image: devopseasylearning/tarzan-weather:v0.0.2
+        ports:
+        - containerPort: 5000
+        env:
+        - name: APIKEY
+          value: "ecbc396f46mshb65cbb1f82cf334p1fcc87jsna5e962a3c542"
+  strategy:
+   type: RollingUpdate
+   rollingUpdate:
+     maxUnavailable: 1
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: weather-service
+spec:
+  type: NodePort
+  selector:
+    svc: weather
+  ports:
+    - port: 5000
+      targetPort: 5000
+      nodePort: 5000
+      protocol: TCP
+  
+
+

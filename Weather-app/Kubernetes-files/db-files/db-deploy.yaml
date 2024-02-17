@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s7ivan-db-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather
+      svc: db
+  template:
+    metadata:
+      labels:
+        app: weather
+        svc: db
+    spec:
+      containers:
+      - name: s7ivan-db
+        image: mysql:8.0.2
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "my-secret-pw"
+        volumeMounts:
+        - name: db-pv
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: db-pv
+        persistentVolumeClaim:
+          claimName: db-pv-claim
+  strategy:
+   type: RollingUpdate
+   rollingUpdate:
+     maxUnavailable: 1
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service
+spec:
+  type: NodePort
+  selector:
+    svc: db
+  ports:
+    - port: 3306
+      targetPort: 3306
+      nodePort: 3306
+      protocol: TCP
+
+
+
+
+

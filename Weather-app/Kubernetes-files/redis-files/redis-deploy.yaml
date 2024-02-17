@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s7ivan-redis-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather
+      svc: redis
+  template:
+    metadata:
+      labels:
+        app: weather
+        svc: redis
+    spec:
+      containers:
+      - name: s7ivan-redis
+        image: redis:latest
+        ports:
+        - containerPort: 6379
+        env:
+        - name: REDIS_USER
+          value: "redis"
+        - name: REDIS_PASSWORD
+          value: "redis"
+        volumeMounts:
+        - name: redis-pv
+          mountPath: /data
+      volumes:
+      - name: redis-pv
+        persistentVolumeClaim:
+          claimName: redis-pv-claim
+  strategy:
+   type: RollingUpdate
+   rollingUpdate:
+     maxUnavailable: 1
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+spec:
+  type: NodePort
+  selector:
+    svc: redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+      nodePort: 6379
+      protocol: TCP
+
+
+
