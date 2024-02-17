@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "expresso-shop-catalog.fullname" . }}
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      version: v1
+      app: expresso
+      app.kubernetes.io/name: expresso-shop-catalog
+      app.kubernetes.io/instance: RELEASE-NAME

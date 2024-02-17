@@ -1,0 +1,247 @@
+---
+# Source: expresso-shop-reviews/templates/pdb_01.yml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: espresso-shop-reviews-01
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app:
+      app: expresso
+      version: v1
+      app.kubernetes.io/name: expresso-shop-reviews
+      app.kubernetes.io/instance: RELEASE-NAME
+---
+# Source: expresso-shop-reviews/templates/pdb_02.yml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: espresso-shop-reviews-02
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app:
+      app: expresso
+      version: v2
+      app.kubernetes.io/name: expresso-shop-reviews
+      app.kubernetes.io/instance: RELEASE-NAME
+---
+# Source: expresso-shop-reviews/templates/serviceaccount_01.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: expresso-reviews-1-sa
+  labels:
+    helm.sh/chart: expresso-shop-reviews-0.1.0
+    app: expresso
+    version: v1
+    app.kubernetes.io/name: expresso-shop-reviews
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: expresso-shop-reviews/templates/serviceaccount_02.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: exspresso-reviews-2-sa
+  labels:
+    helm.sh/chart: expresso-shop-reviews-0.1.0
+    app: expresso
+    version: v2
+    app.kubernetes.io/name: expresso-shop-reviews
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: expresso-shop-reviews/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: espresso-shop-reviews-svc
+  labels:
+    helm.sh/chart: expresso-shop-reviews-0.1.0
+    app: expresso
+    app.kubernetes.io/name: expresso-shop-reviews
+    app.kubernetes.io/instance: expresso-shop-reviews
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: NodePort
+  ports:
+    - port: 8092
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: expresso
+    version: v1
+    app.kubernetes.io/name: expresso-shop-reviews
+    app.kubernetes.io/instance: RELEASE-NAME
+    app: expresso
+    version: v2
+    app.kubernetes.io/name: expresso-shop-reviews
+    app.kubernetes.io/instance: RELEASE-NAME
+---
+# Source: expresso-shop-reviews/templates/deployment_01.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: espresso-shop-reviews-01
+  labels:
+    helm.sh/chart: expresso-shop-reviews-0.1.0
+    app: expresso
+    version: v1
+    app.kubernetes.io/name: expresso-shop-reviews
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    matchLabels:
+      app: expresso
+      version: v1
+      app.kubernetes.io/name: expresso-shop-reviews
+      app.kubernetes.io/instance: RELEASE-NAME
+  template:
+    metadata:
+      labels:
+        app: expresso
+        version: v1
+        app.kubernetes.io/name: expresso-shop-reviews
+        app.kubernetes.io/instance: RELEASE-NAME
+    spec:
+      serviceAccountName: expresso-reviews-1-sa
+      securityContext:
+        {}
+      containers:
+        - name: expresso-shop-reviews
+          securityContext:
+            {}
+          image: "devopseasylearning/s6-expresso-reviews:v1.0.0"
+          imagePullPolicy: Always
+          env:
+          - name: SERVICE_VERSION
+            value: v1
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+---
+# Source: expresso-shop-reviews/templates/deployment_02.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: espresso-shop-reviews-02
+  labels:
+    helm.sh/chart: expresso-shop-reviews-0.1.0
+    app: expresso
+    version: v2
+    app.kubernetes.io/name: expresso-shop-reviews
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    matchLabels:
+      app: expresso
+      version: v2
+      app.kubernetes.io/name: expresso-shop-reviews
+      app.kubernetes.io/instance: RELEASE-NAME
+  template:
+    metadata:
+      labels:
+        app: expresso
+        version: v2
+        app.kubernetes.io/name: expresso-shop-reviews
+        app.kubernetes.io/instance: RELEASE-NAME
+    spec:
+      serviceAccountName: exspresso-reviews-2-sa
+      securityContext:
+        {}
+      containers:
+        - name: expresso-shop-reviews
+          securityContext:
+            {}
+          image: "devopseasylearning/s6-expresso-reviews:v1.0.0"
+          imagePullPolicy: Always
+          env:
+          - name: SERVICE_VERSION
+            value: v2
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+---
+# Source: expresso-shop-reviews/templates/hpa_01.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: espresso-shop-reviews-01
+  labels:
+    helm.sh/chart: expresso-shop-reviews-0.1.0
+    app: expresso
+    version: v1
+    app.kubernetes.io/name: expresso-shop-reviews
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: espresso-shop-reviews-01
+  minReplicas: 1
+  maxReplicas: 6
+  metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 80
+---
+# Source: expresso-shop-reviews/templates/hpa_02.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: espresso-shop-reviews-02
+  labels:
+    helm.sh/chart: expresso-shop-reviews-0.1.0
+    app: expresso
+    version: v2
+    app.kubernetes.io/name: expresso-shop-reviews
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: espresso-shop-reviews-02
+  minReplicas: 1
+  maxReplicas: 6
+  metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 80

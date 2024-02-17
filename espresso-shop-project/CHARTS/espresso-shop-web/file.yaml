@@ -1,0 +1,159 @@
+---
+# Source: espresso-shop-web/templates/pdb.yml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: espresso-shop-web
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app:
+      app: frontend
+      version: v1
+      app.kubernetes.io/name: espresso-shop-web
+      app.kubernetes.io/instance: espresso-shop-web
+---
+# Source: espresso-shop-web/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: espresso-shop-web
+  labels:
+    app: expresso-shop-web
+    helm.sh/chart: espresso-shop-web-0.1.0
+    app: frontend
+    version: v1
+    app.kubernetes.io/name: espresso-shop-web
+    app.kubernetes.io/instance: espresso-shop-web
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: espresso-shop-web/templates/secret-regcred.yml
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJodHRwczovL2luZGV4LmRvY2tlci5pby92MS8iOnsidXNlcm5hbWUiOiJkZXZvcHNlYXN5bGVhcm5pbmciLCJwYXNzd29yZCI6ImRja3JfcGF0X2VfbjIxNF9BNl9mWDFwOHE5bk5GbXNJUWt2QSIsImVtYWlsIjoiaW5mb0BkZXZvcHNlYXN5bGVhcm5pbmcuY29tIiwiYXV0aCI6IlpHVjJiM0J6WldGemVXeGxZWEp1YVc1bk9tUmphM0pmY0dGMFgyVmZiakl4TkY5Qk5sOW1XREZ3T0hFNWJrNUdiWE5KVVd0MlFRPT0ifX19
+kind: Secret
+metadata:
+  name: regcred
+type: kubernetes.io/dockerconfigjson
+---
+# Source: espresso-shop-web/templates/configmap.yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: espresso-shop-config
+data:
+  ProductCatalogUrl: "http://espresso-shop-product-catalog-svc:8091"
+  ReviewsUrl: "http://espresso-shop-reviews-svc:8092"
+---
+# Source: espresso-shop-web/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: expresso-shop-web-svc
+  labels:
+    app: expresso-shop-web
+    helm.sh/chart: espresso-shop-web-0.1.0
+    app: frontend
+    version: v1
+    app.kubernetes.io/name: espresso-shop-web
+    app.kubernetes.io/instance: espresso-shop-web
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: NodePort
+  ports:
+    - port: 8090
+      protocol: TCP
+      targetPort: http
+      name: http
+  selector:
+    app: frontend
+    version: v1
+    app.kubernetes.io/name: espresso-shop-web
+    app.kubernetes.io/instance: espresso-shop-web
+---
+# Source: espresso-shop-web/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: espresso-shop-web
+  labels:
+    app: expresso-shop-web
+    helm.sh/chart: espresso-shop-web-0.1.0
+    app: frontend
+    version: v1
+    app.kubernetes.io/name: espresso-shop-web
+    app.kubernetes.io/instance: espresso-shop-web
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    matchLabels:
+      app: frontend
+      version: v1
+      app.kubernetes.io/name: espresso-shop-web
+      app.kubernetes.io/instance: espresso-shop-web
+  template:
+    metadata:
+      labels:
+        app: frontend
+        version: v1
+        app.kubernetes.io/name: espresso-shop-web
+        app.kubernetes.io/instance: espresso-shop-web
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      serviceAccountName: espresso-shop-web
+      securityContext:
+        {}
+      containers:
+        - name: espresso-shop-web
+          securityContext:
+            {}
+          image: "devopseasylearning/s6-expresso-web:v1.0.0"
+          imagePullPolicy: Always
+          envFrom:
+          - configMapRef:
+              name: espresso-shop-config
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+---
+# Source: espresso-shop-web/templates/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: espresso-shop-web
+  labels:
+    app: expresso-shop-web
+    helm.sh/chart: espresso-shop-web-0.1.0
+    app: frontend
+    version: v1
+    app.kubernetes.io/name: espresso-shop-web
+    app.kubernetes.io/instance: espresso-shop-web
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: espresso-shop-web
+  minReplicas: 1
+  maxReplicas: 100
+  metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 80

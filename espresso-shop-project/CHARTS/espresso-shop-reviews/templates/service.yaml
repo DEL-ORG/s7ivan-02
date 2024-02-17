@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.service.name }}
+  labels:
+    helm.sh/chart: expresso-shop-reviews-0.1.0
+    app: expresso
+    app.kubernetes.io/name: expresso-shop-reviews
+    app.kubernetes.io/instance: expresso-shop-reviews
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "expresso-shop-reviews.selectorLabels_01" . | nindent 4 }}
+    {{- include "expresso-shop-reviews.selectorLabels_02" . | nindent 4 }}

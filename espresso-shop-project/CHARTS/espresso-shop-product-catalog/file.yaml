@@ -1,0 +1,157 @@
+---
+# Source: espresso-shop-product-catalog/templates/pdb.yml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: RELEASE-NAME-espresso-shop-product-catalog
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      version: v1
+      app: expresso
+      app.kubernetes.io/name: expresso-shop-catalog
+      app.kubernetes.io/instance: RELEASE-NAME
+---
+# Source: espresso-shop-product-catalog/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: RELEASE-NAME-espresso-shop-product-catalog
+  labels:
+    helm.sh/chart: espresso-shop-product-catalog-0.1.0
+    version: v1
+    app: expresso
+    app.kubernetes.io/name: expresso-shop-catalog
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: espresso-shop-product-catalog/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: espresso-shop-product-catalog-svc
+  labels:
+    helm.sh/chart: espresso-shop-product-catalog-0.1.0
+    version: v1
+    app: expresso
+    app.kubernetes.io/name: expresso-shop-catalog
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: NodePort
+  ports:
+    - port: 8091
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    version: v1
+    app: expresso
+    app.kubernetes.io/name: expresso-shop-catalog
+    app.kubernetes.io/instance: RELEASE-NAME
+---
+# Source: espresso-shop-product-catalog/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: espresso-shop-product-catalog
+  labels:
+    helm.sh/chart: espresso-shop-product-catalog-0.1.0
+    version: v1
+    app: expresso
+    app.kubernetes.io/name: expresso-shop-catalog
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    matchLabels:
+      version: v1
+      app: expresso
+      app.kubernetes.io/name: expresso-shop-catalog
+      app.kubernetes.io/instance: RELEASE-NAME
+  template:
+    metadata:
+      labels:
+        version: v1
+        app: expresso
+        app.kubernetes.io/name: expresso-shop-catalog
+        app.kubernetes.io/instance: RELEASE-NAME
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      serviceAccountName: RELEASE-NAME-espresso-shop-product-catalog
+      securityContext:
+        {}
+      containers:
+        - name: espresso-shop-product-catalog
+          securityContext:
+            {}
+          image: "devopseasylearning/s6-expresso-catalog:v1.0.0"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+---
+# Source: espresso-shop-product-catalog/templates/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: RELEASE-NAME-espresso-shop-product-catalog
+  labels:
+    helm.sh/chart: espresso-shop-product-catalog-0.1.0
+    version: v1
+    app: expresso
+    app.kubernetes.io/name: expresso-shop-catalog
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: RELEASE-NAME-espresso-shop-product-catalog
+  minReplicas: 1
+  maxReplicas: 100
+  metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 80
+---
+# Source: espresso-shop-product-catalog/templates/networkpolicy.yml
+# apiVersion: networking.k8s.io/v1
+# kind: NetworkPolicy
+# metadata:
+#   name: RELEASE-NAME-espresso-shop-product-catalog
+# spec:
+#   podSelector:
+#     matchLabels:
+#       app: expresso
+#   policyTypes:
+#   - Ingress
+#   - Egress
+#   ingress: []
+#   egress: []
+---
+# Source: espresso-shop-product-catalog/templates/secret-regcred.yml
+# apiVersion: v1
+# data:
+#   .dockerconfigjson: eyJhdXRocyI6eyJodHRwczovL2luZGV4LmRvY2tlci5pby92MS8iOnsidXNlcm5hbWUiOiJkZXZvcHNlYXN5bGVhcm5pbmciLCJwYXNzd29yZCI6ImRja3JfcGF0X2VfbjIxNF9BNl9mWDFwOHE5bk5GbXNJUWt2QSIsImVtYWlsIjoiaW5mb0BkZXZvcHNlYXN5bGVhcm5pbmcuY29tIiwiYXV0aCI6IlpHVjJiM0J6WldGemVXeGxZWEp1YVc1bk9tUmphM0pmY0dGMFgyVmZiakl4TkY5Qk5sOW1XREZ3T0hFNWJrNUdiWE5KVVd0MlFRPT0ifX19
+# kind: Secret
+# metadata:
+#   name: regcred
+# type: kubernetes.io/dockerconfigjson
