@@ -2,7 +2,7 @@ The purpose of this assignment is to give us a baseline assessment of your skill
 write a script in the language of your choice and send it back to us. Thank you for taking time to
 complete these exercises.
 
-1. Write a script to replace all the spaces &quot; &quot; with underscores &quot;_&quot; in file names for an entire
+1. Write a script to replace all the spaces " " with underscores "_" in file names for an entire
 directory sub-tree.
 
 2. Write a script to display all the users and a count of the number of processes they each
