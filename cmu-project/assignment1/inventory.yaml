@@ -1,0 +1,16 @@
+all:
+  children:
+    ubuntu_servers:
+      hosts:
+        ubuntu_server1.com:
+          ansible_host: 10.0.0.1  # replace with the target1 host IP
+          ansible_ssh_pass: password_for_server1
+          ansible_connection: ssh
+        ubuntu_server2.com:
+          ansible_host: 10.0.0.2  # replace with the target2 host IP
+          ansible_ssh_pass: password_for_server2
+          ansible_connection: ssh
+        ubuntu_server3.com:
+          ansible_host: 10.0.0.3  # replace with the target3 host IP
+          ansible_ssh_pass: password_for_server3
+          ansible_connection: ssh

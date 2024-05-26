@@ -1,0 +1,46 @@
+---    # this is a playbook header indicating the start of yaml document
+- name: Setup system, add repository, install package, configure firewall, and remove user  # This is the name of the play
+  hosts: ubuntu_servers
+  # hosts: all  # The play applies to all hosts in the inventory
+  become: yes # Ensures the tasks are executed with elevated privileges(sudo)
+  tasks:
+    - name: Add the apt repository
+      apt_repository: # This is the ansible module to manage apt repositories
+        repo: "deb {{ apt_repository }} $(lsb_release -sc) main" # this is the repo to add using variable. this is a binary repo (deb).
+        # "lsb_release -sc" output the codename of the current release (ex focal or stable.). Use the main section of the repository 
+        state: present # this is the repo desired state, ensuring the repo is added
+
+    - name: Update apt cache
+      apt:                                # ansible module to manage apt packeges
+        update_cache: yes                 # update the local package cache
+
+    - name: Install cmucs-sca-gs package  # this is the name assigned to this ansible task, explaining what the task does
+      apt:                                # this is the module use by ansible to manage package on Debian systems like Ubuntu
+        name: "{{ package_name }}"        # This is an argument for the apt module, defining a package name to be managed
+        state: present                    # this is the second argument of apt module. It determines the desired state of the package
+
+    - name: Add IP table rules
+      iptables:                           # Ansible module to manage IP tables.
+        ipversion: 4                      # The rules are for IPv4 not IPv6
+        name: "filter"                    # the rule should be added on filter table (the default one)
+        chain: INPUT                      # the rule is added to the INPUT chain (for incoming network packets)
+        state: present                    # ensures that the ip table rules are present
+        rules: "{{ item.rule }}"          # use the variable from the loop to specify the rule
+      loop: "{{ iptable_rules }}"         # loops through each item in the "iptable_rules" list, applying each rule
+
+    - name: Remove temp-user
+      user:                               # Ansible module to manage users.
+        name: "{{ user }}"
+        state: absent
+        remove: yes
+
+    - name: Reboot the system
+      reboot:                              # Ansible module to reboot the system
+        msg: "Reboot initiated by Ansible playbook after setup."  # message to log before reboot
+        pre_reboot_delay: 5                # wait time before rebooting (in seconds)
+        post_reboot_delay: 30              # wait time after rebooting to allow the system to come back up (in seconds)
+        test_command: "whoami"             # command to run after reboot to ensure the system is back online
+
+# command to execute the playbook : ansible-playbook -i inventory.txt cmu-playbook.yaml
+# NB: we need to create a temp_user in every target host, create a key pair for that user. 
+# store the public key in the target host, and the private key in ansible controller server, then specify the private key file path in the config file

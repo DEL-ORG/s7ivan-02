@@ -1,0 +1,8 @@
+user: "temp-user"
+apt_repository: "http://aptrepo.srv.cs.cmu.edu"
+# apt_repository: "deb http://aptrepo.srv.cs.cmu.edu stable main"
+package_name: "cmucs-sca-gs"
+iptable_rules:
+  - rule: "-A INPUT -s 128.2.0.0/16 --dport 3000 -j ACCEPT" # allow incoming traffic from any IP in the 128.2.0.0/16 subnet, destined for port 3000
+  - rule: "-A INPUT -s 172.31.0.0/16 --dport 3000 -j ACCEPT"
+  - rule: "-A INPUT --dport 3000 -j REJECT --reject-with icmp-port-unreachable"
