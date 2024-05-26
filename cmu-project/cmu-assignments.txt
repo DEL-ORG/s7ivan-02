@@ -1,0 +1,21 @@
+The purpose of this assignment is to give us a baseline assessment of your skill set. Please
+write a script in the language of your choice and send it back to us. Thank you for taking time to
+complete these exercises.
+
+1. Write a script to replace all the spaces &quot; &quot; with underscores &quot;_&quot; in file names for an entire
+directory sub-tree.
+
+2. Write a script to display all the users and a count of the number of processes they each
+have on the system (modify to exclude the root user.)
+
+3. Write an Ansible playbook(s) to do the following:
+
+For a stock ubuntu install connect as temp-user (which has sudo access)
+Add the following apt repository to the system: http://aptrepo.srv.cs.cmu.edu
+Install the package cmucs-sca-gs
+Remove the temp-user from the system then reboot
+Modify the above playbook/s to also add the following iP table rules to the
+system:
+-A INPUT -s 128.2.0.0/16 --dport 3000 -j ACCEPT
+-A INPUT -s 172.31.0.0/16 --dport 3000 -j ACCEPT
+-A INPUT --dport 3000 -j REJECT --reject-with icmp-port-unreachable
