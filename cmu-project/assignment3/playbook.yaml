@@ -1,0 +1,7 @@
+---
+- name: Setup system, add repository, install package, configure firewall, and remove user
+  hosts: ubuntu_servers
+  roles:
+   - cmu-role
+  become: yes
+  gather_facts: yes

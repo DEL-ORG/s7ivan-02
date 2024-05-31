@@ -1,3 +1,4 @@
+---
 user: "temp-user"
 apt_repository: "http://aptrepo.srv.cs.cmu.edu"
 # apt_repository: "deb http://aptrepo.srv.cs.cmu.edu stable main"
